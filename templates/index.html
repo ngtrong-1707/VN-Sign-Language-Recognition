@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSL Vision - Hệ thống Nhận diện Ngôn ngữ Ký hiệu Tiếng Việt Real-time</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Hope:RE Style System -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="header-container">
+            <a href="/" class="brand">
+                <div class="brand-icon">🤟</div>
+                <div class="brand-title">
+                    VSL<span>VISION</span>
+                    <span class="brand-badge">Hope:RE Engine</span>
+                </div>
+            </a>
+
+            <nav class="nav-tabs">
+                <button class="tab-btn active" data-view="live">
+                    <span>🔴</span> Trực tiếp Webcam
+                </button>
+                <button class="tab-btn" data-view="upload">
+                    <span>📁</span> Tải lên Video
+                </button>
+                <button class="tab-btn" data-view="dict">
+                    <span>📖</span> Từ điển VSL ({{ actions_count }})
+                </button>
+                <button class="tab-btn" data-view="specs">
+                    <span>⚙️</span> Kiến trúc & Thông số
+                </button>
+            </nav>
+
+            <div class="telemetry-bar">
+                <div id="ws-status-badge" class="badge badge-live">
+                    <span class="pulse-dot"></span> SẴN SÀNG
+                </div>
+                <div class="badge">
+                    <span>⚡ {{ device }}</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-wrapper">
+
+        <!-- VIEW 1: LIVE WEBCAM INFERENCE -->
+        <section id="view-live" class="view-section active">
+            <div class="studio-grid">
+                
+                <!-- Left: Video Viewport & Sentence Builder -->
+                <div class="stage-container">
+                    <div class="viewport-wrapper">
+                        <!-- Placeholder before camera on -->
+                        <div id="viewport-placeholder" class="viewport-placeholder">
+                            <div class="camera-hero-icon">📷</div>
+                            <h3 style="color: #fff; font-size: 1.25rem;">Camera đang tắt</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 380px; text-align: center;">
+                                Nhấn nút <strong>Bật Camera</strong> bên dưới để bắt đầu nhận diện cử chỉ ký hiệu tiếng Việt theo thời gian thực.
+                            </p>
+                            <button id="btn-toggle-cam" class="btn-primary">
+                                🎥 Bật Camera Ngay
+                            </button>
+                        </div>
+
+                        <!-- Video & Skeleton Layer -->
+                        <video id="video-element" playsinline style="transform: scaleX(-1);"></video>
+                        <canvas id="canvas-element" style="transform: scaleX(-1);"></canvas>
+
+                        <!-- Live Floating HUD Badge -->
+                        <div class="live-prediction-badge">
+                            <div id="hud-pred-icon" class="pred-icon">✨</div>
+                            <div class="pred-info">
+                                <span class="pred-label">Cử chỉ nhận diện</span>
+                                <span id="hud-pred-name" class="pred-name">Đang chờ...</span>
+                            </div>
+                            <div id="hud-pred-conf" class="pred-conf">0.0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Stage Controls Toolbar -->
+                    <div class="stage-toolbar">
+                        <div class="toggle-group">
+                            <button id="btn-mirror" class="btn-secondary" title="Lật gương camera">
+                                🔄 Lật gương
+                            </button>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            💡 <em>Mẹo: Hãy đưa cả 2 tay vào khung hình để MediaPipe Holistic đạt độ chính xác cao nhất.</em>
+                        </div>
+                    </div>
+
+                    <!-- Live Sentence Translation Box -->
+                    <div class="sentence-card">
+                        <div class="sentence-header">
+                            <div class="sentence-title">
+                                <span>💬</span> Văn bản dịch liên tục (Sentence Builder)
+                            </div>
+                            <div class="sentence-actions">
+                                <button id="btn-speak-sentence" class="btn-primary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">
+                                    🔊 Phát âm (TTS)
+                                </button>
+                                <button id="btn-copy-sentence" class="btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">
+                                    📋 Sao chép
+                                </button>
+                                <button id="btn-clear-sentence" class="btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">
+                                    🗑️ Xóa
+                                </button>
+                            </div>
+                        </div>
+                        <div id="sentence-box" class="sentence-content">
+                            <span style="color: var(--text-muted); font-size: 0.95rem;">Chưa có từ nào được nhận diện. Hãy làm dấu trước camera...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Analytics, Probability Bars & Telemetry -->
+                <aside class="sidebar-panel">
+                    <!-- Probability Bars Card -->
+                    <div class="glass-card">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <span>📊</span> Phân phối Xác suất Top-5
+                            </div>
+                            <span class="badge" style="font-size: 0.68rem;">SOFTMAX</span>
+                        </div>
+                        <div id="prob-bars-container" class="prob-list">
+                            <!-- Populated dynamically via JS -->
+                            <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 2rem 0;">
+                                Đang khởi động mạng nơ-ron...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Telemetry Stats Card -->
+                    <div class="glass-card">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <span>⚡</span> Giám sát Hệ thống (Telemetry)
+                            </div>
+                        </div>
+                        <div class="telemetry-grid">
+                            <div class="telemetry-card">
+                                <span class="tele-label">Độ trễ suy luận</span>
+                                <span id="tele-latency" class="tele-val">0.0 ms</span>
+                            </div>
+                            <div class="telemetry-card">
+                                <span class="tele-label">Tốc độ khung hình</span>
+                                <span id="tele-fps" class="tele-val">0 FPS</span>
+                            </div>
+                            <div class="telemetry-card">
+                                <span class="tele-label">Bộ đệm chuỗi</span>
+                                <span id="tele-buffer" class="tele-val">0/30</span>
+                            </div>
+                            <div class="telemetry-card">
+                                <span class="tele-label">Tham số mô hình</span>
+                                <span class="tele-val">{{ total_params }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+            </div>
+        </section>
+
+        <!-- VIEW 2: VIDEO FILE TRANSLATOR -->
+        <section id="view-upload" class="view-section">
+            <div class="glass-card" style="max-width: 900px; margin: 0 auto;">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span>📁</span> Tải lên Video để Dịch Ngôn ngữ Ký hiệu (Offline Video Translator)
+                    </div>
+                </div>
+
+                <div id="upload-dropzone" class="upload-dropzone">
+                    <input type="file" id="video-file-input" accept="video/mp4,video/webm,video/avi" style="display: none;">
+                    <div class="upload-icon">📹</div>
+                    <h3 style="color: #fff;">Kéo thả video vào đây hoặc nhấn để chọn file</h3>
+                    <p style="color: var(--text-muted); font-size: 0.88rem;">
+                        Hỗ trợ định dạng: <code>.mp4</code>, <code>.webm</code>, <code>.avi</code> (Tối đa 100MB)
+                    </p>
+                </div>
+
+                <div id="upload-status" style="margin-top: 1rem; font-weight: 600; color: var(--accent-cyan); text-align: center;"></div>
+
+                <div id="upload-results" style="display: none; margin-top: 1.5rem;">
+                    <div class="sentence-card" style="margin-bottom: 1.5rem;">
+                        <div class="sentence-title"><span>📝</span> Kết quả dịch toàn bộ video:</div>
+                        <div id="upload-sentence" class="sentence-content" style="color: var(--accent-cyan);"></div>
+                    </div>
+
+                    <table class="timeline-table">
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Ký hiệu nhận diện</th>
+                                <th>Độ chính xác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="upload-timeline-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: VSL DICTIONARY EXPLORER -->
+        <section id="view-dict" class="view-section">
+            <div class="dict-toolbar">
+                <input type="text" id="dict-search" class="search-input" placeholder="🔍 Tìm kiếm ký hiệu hoặc hướng dẫn...">
+                
+                <div class="category-chips">
+                    <button class="chip-btn active" data-cat="all">Tất cả ({{ actions_count }})</button>
+                    <button class="chip-btn" data-cat="Chào hỏi">Chào hỏi</button>
+                    <button class="chip-btn" data-cat="Giao tiếp">Giao tiếp</button>
+                    <button class="chip-btn" data-cat="Đại từ">Đại từ</button>
+                    <button class="chip-btn" data-cat="Cảm xúc">Cảm xúc</button>
+                    <button class="chip-btn" data-cat="Đời sống">Đời sống</button>
+                    <button class="chip-btn" data-cat="Câu hỏi">Câu hỏi</button>
+                </div>
+            </div>
+
+            <div class="dict-grid">
+                {% for item in actions_metadata %}
+                <div class="dict-card" data-name="{{ item.display }} {{ item.name }}" data-desc="{{ item.desc }}" data-cat="{{ item.category }}">
+                    <div class="dict-card-header">
+                        <div class="dict-icon">{{ item.icon }}</div>
+                        <span class="dict-cat">{{ item.category }}</span>
+                    </div>
+                    <div class="dict-title">{{ item.display }}</div>
+                    <div style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted);">
+                        ID: {{ item.id }} | <code>{{ item.name }}</code>
+                    </div>
+                    <div class="dict-desc">{{ item.desc }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- VIEW 4: SYSTEM SPECS & ARCHITECTURE -->
+        <section id="view-specs" class="view-section">
+            <div class="glass-card" style="max-width: 900px; margin: 0 auto;">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span>⚙️</span> Chi tiết Kiến trúc Hệ thống VSL Bi-GRU
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: 0.75rem;">1. Trích xuất đặc trưng (Landmarks)</h4>
+                        <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8; padding-left: 1.2rem;">
+                            <li><strong>Pose Landmarks (Thân trên):</strong> 33 điểm × 4 (x,y,z,visibility) = 132</li>
+                            <li><strong>Bàn tay trái:</strong> 21 điểm × 3 (x,y,z) = 63</li>
+                            <li><strong>Bàn tay phải:</strong> 21 điểm × 3 (x,y,z) = 63</li>
+                            <li><strong style="color: #fff;">Tổng kích thước Vector / Frame:</strong> 258 features</li>
+                            <li><strong>Chiều dài cửa sổ trượt:</strong> 30 frames (~1.0 giây)</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 style="color: var(--accent-purple); margin-bottom: 0.75rem;">2. Mạng Nơ-ron Chuỗi (Sequence Model)</h4>
+                        <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8; padding-left: 1.2rem;">
+                            <li><strong>Kiến trúc:</strong> Bidirectional GRU (2 Layers, Hidden 128)</li>
+                            <li><strong>Cơ chế Chú ý:</strong> Temporal Self-Attention Layer</li>
+                            <li><strong>Tổng số tham số:</strong> {{ total_params }}</li>
+                            <li><strong>Độ trễ suy luận trung bình:</strong> &lt; 4.0ms trên CPU</li>
+                            <li><strong>Định dạng xuất:</strong> PyTorch (<code>.pth</code>) & ONNX Runtime (<code>.onnx</code>)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- App Engine Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
