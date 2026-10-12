@@ -53,6 +53,18 @@ Dự án xử lý bài toán nhận diện ngôn ngữ ký hiệu động (Dynam
 
 ---
 
+## 💻 Trích đoạn Mã nguồn & Kiểm tra Thực nghiệm (CodeSnap)
+
+<p align="center">
+  <img src="assets/code_snapshot.png" alt="Bi-GRU Architecture CodeSnap" width="90%">
+</p>
+
+<p align="center">
+  <img src="assets/terminal_snapshot.png" alt="Pytest & ONNX Benchmark Terminal" width="90%">
+</p>
+
+---
+
 ## 🏗️ Kiến trúc hệ thống
 
 ```mermaid
