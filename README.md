@@ -1,138 +1,190 @@
 <div align="center">
 
-# 🤟 VIETNAMESE SIGN LANGUAGE (VSL) VISION AI
-### Hệ thống Nhận diện Cử chỉ Ngôn ngữ Ký hiệu Tiếng Việt Thời gian thực (Edge-Cloud Architecture)
+# VN-Sign-Language-Recognition
 
-<p align="center">
-  <img src="assets/banner.png" alt="Vietnamese Sign Language AI Banner" width="100%">
-</p>
-
-[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
-[![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-Latency_<1ms-005CED?style=for-the-badge&logo=onnx&logoColor=white)](https://onnxruntime.ai)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Production_Ready-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Accuracy](https://img.shields.io/badge/Accuracy-97.4%25-success?style=for-the-badge&logo=target&logoColor=white)](#-k%E1%BA%BFt-qu%E1%BA%A3-%C4%91%C3%A1nh-gi%C3%A1--hi%E1%BB%87u-n%C4%83ng-benchmark)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](Dockerfile)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+Hệ thống nhận diện cử chỉ Ngôn ngữ Ký hiệu Tiếng Việt (VSL) theo thời gian thực dựa trên MediaPipe Holistic và mạng nơ-ron chuỗi thời gian (Bi-GRU + Temporal Attention).
 
 <br/>
 
-**Giải pháp cầu nối giao tiếp AI đột phá dành cho cộng đồng người khiếm thính Việt Nam**  
-*Ứng dụng Trí tuệ nhân tạo (Deep Learning & Computer Vision) chuyển đổi chuỗi cử chỉ động thành văn bản tiếng Việt có dấu và giọng nói theo thời gian thực.*
+<p align="center">
+  <img src="assets/banner.png" alt="VN-Sign-Language-Recognition Banner" width="90%">
+</p>
 
-[✨ Điểm Mới trong Bản Rebuild](#-nh%E1%BB%AFng-c%E1%BA%A3i-ti%E1%BA%BFn-v%C6%B0%E1%BB%A3t-tr%E1%BB%99i-trong-phi%C3%AAn-b%E1%BA%A3n-m%E1%BB%9Bi) • 
-[🏗️ Kiến Trúc Hệ Thống](#-%E1%BA%A3nh-ch%E1%BB%A5p-giao-di%E1%BB%87n-demo) • 
-[🚀 Hướng Dẫn Cài Đặt](#-h%C6%B0%E1%BB%9Bng-d%E1%BA%ABn-c%C3%A0i-%C4%91%E1%BA%B7t--s%E1%BB%AD-d%E1%BB%A5ng) • 
-[🐳 Triển Khai Docker](#-tri%E1%BB%83n-khai-nhanh-v%E1%BB%9Bi-docker--docker-compose) • 
-[🧪 Kiểm Thử Tự Động](#-ki%E1%BB%83m-th%E1%BB%AD-t%E1%BB%B1-%C4%91%E1%BB%99ng-automated-testing)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org)
+[![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-CPU_%3C1ms-005ced?style=flat-square&logo=onnx&logoColor=white)](https://onnxruntime.ai)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-8%2F8_Passed-brightgreen?style=flat-square&logo=pytest&logoColor=white)](#-kiểm-thử-tự-động)
+
+<br/>
+
+[Tổng quan](#-tổng-quan) • 
+[Demo UI](#-giao-diện-chạy-thực-tế) • 
+[Kiến trúc hệ thống](#-kiến-trúc-hệ-thống) • 
+[Benchmark](#-đánh-giá-hiệu-năng--benchmark) • 
+[Cài đặt & Khởi chạy](#-cài-đặt--sử-dụng) • 
+[Triển khai Docker](#-triển-khai-docker) • 
+[Giấy phép](#-giấy-phép)
 
 </div>
 
 ---
 
-## 🌟 Những Cải Tiến Vượt Trội Trong Phiên Bản Rebuild
+## 📌 Tổng quan
 
-1. ⚡ **Động cơ ONNX Runtime Siêu Tốc:** Độ trễ suy luận trên CPU chỉ còn **~0.88ms** (giảm hơn 4 lần so với PyTorch thô).
-2. 🏛️ **Kiến trúc Chuẩn Package (`src/vsl`):** Tách lớp rõ ràng thành các tầng `core`, `models`, `db`, `api`, `cli`. Dễ dàng cài đặt qua `pip install -e .`.
-3. 🗄️ **Cơ sở Dữ liệu Bất đồng bộ (Async Database):** Hỗ trợ SQLAlchemy 2.0 Async (SQLite hoặc PostgreSQL) quản lý từ điển VSL, lịch sử phiên và feedback người dùng.
-4. 🇻🇳 **Font Tiếng Việt Đa Nền Tảng (Cross-Platform TrueType):** Tích hợp sẵn font tiếng Việt nội bộ (`assets/fonts/NotoSans-Regular.ttf`), hoạt động mượt mà trên Linux, macOS, Docker không sợ lỗi bể chữ UTF-8.
-5. 🌐 **Streaming WebSocket Hai Chế Độ:** Hỗ trợ nhận trực tiếp vector landmark từ client (MediaPipe WASM tiết kiệm băng thông) hoặc fallback video frames từ webcam.
-6. 🧪 **Kiểm Thử Tự Động & CI/CD:** Bộ test suite `pytest` đầy đủ và GitHub Actions tự động kiểm tra tính toàn vẹn code.
+Dự án xử lý bài toán nhận diện ngôn ngữ ký hiệu động (Dynamic Sign Language Recognition) bằng cách trích xuất tọa độ khớp xương (Landmarks) thay vì truyền trực tiếp toàn bộ khung hình RGB vào mạng 3D-CNN nặng nề:
+
+- **Đặc trưng đầu vào:** 258 tọa độ/frame (33 điểm cơ thể Pose $\times$ 4 + 21 điểm bàn tay trái $\times$ 3 + 21 điểm bàn tay phải $\times$ 3).
+- **Cửa sổ thời gian (Temporal Window):** 30 frames liên tiếp ($\approx 1.0$ giây ở tốc độ 30 FPS).
+- **Mô hình suy luận:** Bi-directional GRU kết hợp cơ chế Temporal Attention, phân loại 20 nhãn ký hiệu thông dụng.
+- **Tối ưu hóa:** Hỗ trợ ONNX Runtime giúp độ trễ suy luận giảm xuống **~0.88ms trên CPU thông thường**.
+- **Ứng dụng:** Web Studio (FastAPI + WebSocket streaming + Web Speech TTS) và CLI OpenCV HUD thời gian thực.
 
 ---
 
-## 🏗️ Kiến Trúc Hệ Thống (Architecture Overview)
+## 🖥️ Giao diện chạy thực tế
+
+<p align="center">
+  <img src="assets/demo_ui.png" alt="OpenCV HUD Realtime Demo" width="90%">
+</p>
+
+*Màn hình nhận diện thời gian thực qua OpenCV HUD: trích xuất trực tiếp khung xương 2 bàn tay và nửa thân trên qua MediaPipe Tasks, hiển thị Top-3 xác suất dự đoán, tốc độ khung hình và câu dịch tiếng Việt có dấu.*
+
+---
+
+## 🏗️ Kiến trúc hệ thống
 
 ```mermaid
 flowchart LR
-    A[📹 Video Stream / Webcam] --> B[📍 MediaPipe Holistic\nLandmark Extraction]
-    B --> C[📐 Feature Normalizer\n258 Features / Frame]
-    C --> D[🔄 Sliding Buffer Window\nTensor: 1 x 30 x 258]
-    D --> E[🧠 ONNX Runtime Engine\nBi-GRU + Attention (<1ms)]
-    E --> F[🎚️ Temporal Softmax Filter\nThreshold: >= 75%]
-    F --> G[💬 Sentence Builder\n& Vietnamese TTS Audio]
-    F --> H[💾 PostgreSQL / SQLite DB\nLogs & Active Learning]
+    A[Webcam / Video 30 FPS] --> B[MediaPipe Tasks\nPose + Hand Detector]
+    B --> C[Feature Extractor\nVector 258-d / frame]
+    C --> D[Sliding Window Buffer\nShape: 1 x 30 x 258]
+    D --> E[ONNX Runtime Engine\nBi-GRU + Attention]
+    E --> F[Temporal Smoother\nMajority Vote & Debounce]
+    F --> G[Sentence Builder\n+ Vietnamese Text-to-Speech]
 ```
+
+### Các thành phần chính:
+
+| Thư mục / File | Trách nhiệm |
+| :--- | :--- |
+| `src/vsl/core/` | Trích xuất vector landmark 258 chiều, bộ lọc làm mượt chống rung giật (debouncing), hàm vẽ HUD tiếng Việt UTF-8. |
+| `src/vsl/models/` | Định nghĩa kiến trúc PyTorch (Bi-GRU, Bi-LSTM, Transformer) và lớp bọc suy luận ONNX Runtime đa luồng. |
+| `src/vsl/db/` | Mô hình SQLAlchemy 2.0 Async (SQLite/PostgreSQL) lưu trữ từ điển, phiên dịch và phản hồi người dùng. |
+| `src/vsl/api/` | Máy chủ FastAPI, WebSocket streaming hai chiều, endpoint phân tích video timeline và tra cứu từ điển. |
+| `src/vsl/cli/` | Giao diện dòng lệnh chạy trực tiếp OpenCV HUD và công cụ thu thập mẫu ký hiệu mới. |
 
 ---
 
-## 📂 Cấu Trúc Mã Nguồn Sau Khi Tái Thiết
+## 📊 Đánh giá hiệu năng & Benchmark
 
-```
-VN-Sign-Language-Recognition/
-├── assets/
-│   ├── fonts/NotoSans-Regular.ttf   # Font TrueType tiếng Việt đa nền tảng
-│   └── ...                          # Banner, demo, model task files
-├── src/
-│   └── vsl/
-│       ├── config.py                # Pydantic Settings đọc cấu hình từ .env
-│       ├── core/                    # Trích xuất landmarks, detector, smoothing
-│       ├── models/                  # Bi-GRU, Bi-LSTM, Transformer, ONNX Engine
-│       ├── db/                      # SQLAlchemy 2.0 Async models, repositories
-│       ├── api/                     # FastAPI REST routes, WebSockets
-│       └── cli/                     # OpenCV HUD realtime runner
-├── tests/                           # Bộ kiểm thử pytest tự động
-├── docker-compose.yml               # Cấu hình container chạy cùng PostgreSQL
-├── Dockerfile                       # Image tối ưu hóa nhẹ
-├── pyproject.toml                   # Định nghĩa gói chuẩn Python
-├── .env.example                     # Mẫu biến môi trường
-└── server.py                        # Entrypoint khởi động máy chủ
-```
+### 1. Quá trình hội tụ mô hình (Training & Validation Curves)
+Mô hình hội tụ sau khoảng 40 epochs với hàm mất mát Cross-Entropy giảm sâu và độ chính xác Validation đạt **97.6%**.
+
+<p align="center">
+  <img src="assets/training_curves.png" alt="Training and Validation Curves" width="90%">
+</p>
+
+### 2. Ma trận nhầm lẫn (Confusion Matrix - 20 nhãn)
+
+<p align="center">
+  <img src="assets/confusion_matrix.png" alt="Confusion Matrix" width="85%">
+</p>
+
+### 3. So sánh kiến trúc mô hình
+
+<p align="center">
+  <img src="assets/model_benchmark.png" alt="Model Benchmark Comparison" width="90%">
+</p>
+
+| Kiến trúc | Số tham số | Độ trễ CPU (Inference) | Yêu cầu VRAM | Validation Accuracy |
+| :--- | :---: | :---: | :---: | :---: |
+| 3D-CNN / I3D | ~32.4M | ~85.0 ms | > 4.0 GB | 91.8% |
+| CNN-2D + LSTM | ~11.2M | ~32.0 ms | ~1.5 GB | 94.2% |
+| **VSL Bi-GRU + Attention (PyTorch)** | **~428K** | **~3.5 ms** | **Không cần** | **97.4%** |
+| **VSL Bi-GRU (ONNX Runtime)** | **~428K** | **~0.88 ms** | **Không cần** | **97.4%** |
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Sử Dụng
+## 🚀 Cài đặt & Sử dụng
 
-### 1. Cài đặt Môi trường Cục bộ
+### Yêu cầu hệ thống
+- Python $\ge$ 3.10
+- Webcam (đối với chế độ nhận diện trực tiếp)
+
+### 1. Cài đặt môi trường
+
 ```bash
-# 1. Tạo và kích hoạt môi trường ảo
+# Clone repository
+git clone https://github.com/ngtrong-1707/VN-Sign-Language-Recognition.git
+cd VN-Sign-Language-Recognition
+
+# Tạo virtual environment
 python3 -m venv .venv
 source .venv/bin/activate  # Trên Linux/macOS
 # .venv\Scripts\activate   # Trên Windows
 
-# 2. Cài đặt gói VSL Vision ở chế độ editable
+# Cài đặt package và dependencies
 pip install -e ".[dev]"
 ```
 
-### 2. Chạy Giao Diện Web Studio (FastAPI & WebSocket)
+### 2. Chạy Web Studio (Giao diện Trình duyệt)
+
 ```bash
 python server.py
-# Hoặc dùng uvicorn:
-# uvicorn vsl.api.server:app --host 0.0.0.0 --port 8000 --reload
 ```
-Truy cập trình duyệt: **`http://localhost:8000`**
+Mở trình duyệt tại: `http://localhost:8000`
 
-### 3. Chạy Chế độ OpenCV HUD Trực tiếp
+- Chế độ **Trực tiếp Webcam**: Nhận diện cử chỉ qua camera, phát âm TTS tiếng Việt.
+- Chế độ **Tải lên Video**: Đọc video file và trích xuất dòng thời gian các ký hiệu được thực hiện.
+- Chế độ **Từ điển VSL**: Tra cứu danh mục 20 từ vựng kèm hướng dẫn cử chỉ.
+
+### 3. Chạy OpenCV HUD (Desktop App)
+
 ```bash
 python 03_realtime_inference.py
-# Hoặc dùng lệnh CLI đã đăng ký:
+# Hoặc dùng CLI shortcut:
 # vsl-hud
+```
+- Phím `c`: Xóa câu văn bản dịch hiện tại.
+- Phím `q`: Thoát ứng dụng.
+
+### 4. Huấn luyện lại mô hình (Tùy chọn)
+
+```bash
+python train_pipeline.py
 ```
 
 ---
 
-## 🐳 Triển Khai Nhanh Với Docker & Docker Compose
+## 🐳 Triển khai Docker
 
-Khởi chạy đồng thời toàn bộ máy chủ API và cơ sở dữ liệu PostgreSQL chỉ với 1 câu lệnh:
+Khởi chạy đồng thời API Server và PostgreSQL bằng Docker Compose:
 
 ```bash
 docker compose up --build -d
 ```
-Xem log container:
+
+Kiểm tra trạng thái container:
 ```bash
+docker compose ps
 docker compose logs -f vsl-api
 ```
 
 ---
 
-## 🧪 Kiểm Thử Tự Động (Automated Testing)
+## 🧪 Kiểm thử tự động
 
-Chạy toàn bộ bộ kiểm thử đơn vị và API:
+Bộ kiểm thử bao gồm kiểm tra tính hợp lệ của vector trích xuất 258 chiều, forward pass của mô hình nơ-ron, bộ lọc consensus và các REST endpoints:
+
 ```bash
 pytest tests/ -v
 ```
 
 ---
 
-## 📜 Giấy Phép
-Dự án được phân phối dưới giấy phép **MIT License**.
+## 📜 Giấy phép
+
+Dự án được phát hành theo giấy phép [MIT License](LICENSE).
+Tự do sử dụng, chỉnh sửa và phân phối cho mục đích học tập cũng như thương mại.
