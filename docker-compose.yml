@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: vsl_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vsl_user
+      POSTGRES_PASSWORD: vsl_password
+      POSTGRES_DB: vsl_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vsl_user -d vsl_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  vsl-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vsl_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://vsl_user:vsl_password@db:5432/vsl_db
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8000
+      - USE_ONNX=true
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:

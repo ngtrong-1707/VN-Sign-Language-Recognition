@@ -2,12 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
-# Distribution / packaging
-.Python
+# C extensions
 build/
 develop-eggs/
 dist/
@@ -24,32 +21,30 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Virtual Environments
+# Virtual Environment
 .env
-.venv
-env/
+.venv/
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
 
-# Logs
-logs/*
-!logs/.gitkeep
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs & Temporary files
+logs/
 *.log
+.pytest_cache/
+.coverage
+htmlcov/
 
-# IDE & Editor
-.vscode/
-.idea/
-*.swp
-*.swo
+# Heavy Dataset frames (exclude individual frame npy arrays from git bloat)
+data/sequences/
+data/raw_videos/
 
-# OS files
-.DS_Store
-Thumbs.db
+# Checkpoint model tasks if using git-lfs or external hosting
+models/checkpoints/*.pth
+# Keep ONNX model or lightweight binaries as needed
