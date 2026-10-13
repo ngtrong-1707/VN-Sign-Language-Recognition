@@ -155,9 +155,14 @@ Mở trình duyệt tại: `http://localhost:8000`
 ### 3. Chạy OpenCV HUD (Desktop App)
 
 ```bash
+# Quét danh sách các camera đang kết nối:
+python 03_realtime_inference.py --list-cameras
+
+# Chạy với camera mặc định (Camera 0):
 python 03_realtime_inference.py
-# Hoặc dùng CLI shortcut:
-# vsl-hud
+
+# Hoặc chọn nguồn camera cụ thể (Camera 1, URL RTSP, hoặc video stream):
+python 03_realtime_inference.py --camera 1 --width 1280 --height 720
 ```
 - Phím `c`: Xóa câu văn bản dịch hiện tại.
 - Phím `q`: Thoát ứng dụng.

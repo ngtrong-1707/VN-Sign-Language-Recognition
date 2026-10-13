@@ -21,8 +21,10 @@ class VSLApp {
         this.lastConfidentSign = null;
         this.lastSignTimestamp = 0;
         this.currentRawPred = '';
+        this.selectedDeviceId = null;
 
         this.initEventListeners();
+        this.enumerateCameras();
         this.connectWebSocket();
         this.initTTS();
     }
@@ -40,6 +42,19 @@ class VSLApp {
         const btnToggleCam = document.getElementById('btn-toggle-cam');
         if (btnToggleCam) {
             btnToggleCam.addEventListener('click', () => this.toggleCamera());
+        }
+
+        // Camera Selector Change
+        const camSelect = document.getElementById('select-camera-source');
+        if (camSelect) {
+            camSelect.addEventListener('change', async (e) => {
+                this.selectedDeviceId = e.target.value;
+                if (this.isStreaming) {
+                    // Switch camera source on the fly
+                    await this.toggleCamera(); // stop current
+                    await this.toggleCamera(); // start with new device
+                }
+            });
         }
 
         const btnMirror = document.getElementById('btn-mirror');
@@ -177,6 +192,41 @@ class VSLApp {
         };
     }
 
+    async enumerateCameras() {
+        const camSelect = document.getElementById('select-camera-source');
+        if (!camSelect) return;
+
+        try {
+            // Check if mediaDevices is supported
+            if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+                camSelect.innerHTML = '';
+                if (videoDevices.length === 0) {
+                    camSelect.innerHTML = '<option value="">Camera Mặc Định</option>';
+                    return;
+                }
+
+                videoDevices.forEach((device, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = device.deviceId;
+                    opt.textContent = device.label || `Camera ${idx + 1}`;
+                    camSelect.appendChild(opt);
+                });
+
+                if (!this.selectedDeviceId && videoDevices.length > 0) {
+                    this.selectedDeviceId = videoDevices[0].deviceId;
+                }
+            } else {
+                camSelect.innerHTML = '<option value="">Camera Mặc Định</option>';
+            }
+        } catch (err) {
+            console.warn('[CAMERA] Không thể truy vấn danh sách thiết bị:', err);
+            camSelect.innerHTML = '<option value="">Camera Mặc Định</option>';
+        }
+    }
+
     async toggleCamera() {
         const placeholder = document.getElementById('viewport-placeholder');
         const btnToggleCam = document.getElementById('btn-toggle-cam');
@@ -184,10 +234,20 @@ class VSLApp {
 
         if (!this.isStreaming) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
+                const constraints = {
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 30 }
+                    },
                     audio: false
-                });
+                };
+
+                if (this.selectedDeviceId) {
+                    constraints.video.deviceId = { exact: this.selectedDeviceId };
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
                 this.video.srcObject = stream;
                 await this.video.play();
@@ -202,6 +262,9 @@ class VSLApp {
                     btnToggleCam.textContent = 'Dừng Camera';
                     btnToggleCam.classList.replace('btn-primary', 'btn-secondary');
                 }
+
+                // Refresh camera labels if permission was just granted
+                await this.enumerateCameras();
 
                 this.streamInterval = setInterval(() => this.sendFrame(), 33);
             } catch (err) {

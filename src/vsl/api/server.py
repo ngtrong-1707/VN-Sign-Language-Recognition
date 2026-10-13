@@ -15,6 +15,7 @@ from vsl.models.engine import VSLInferenceEngine
 from vsl.api.routes_dict import router as dict_router
 from vsl.api.routes_feedback import router as feedback_router
 from vsl.api.routes_video import router as video_router
+from vsl.api.routes_camera import router as camera_router
 from vsl.api.websocket import router as ws_router
 
 
@@ -43,6 +44,7 @@ templates = Jinja2Templates(directory=str(settings.TEMPLATES_DIR))
 app.include_router(dict_router)
 app.include_router(feedback_router)
 app.include_router(video_router)
+app.include_router(camera_router)
 app.include_router(ws_router)
 
 

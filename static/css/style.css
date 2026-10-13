@@ -348,7 +348,39 @@ body {
 
 .toolbar-actions {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.camera-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.45rem;
+}
+
+.select-label {
+  font-size: 0.85rem;
+}
+
+.form-select-sm {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  max-width: 190px;
+}
+
+.form-select-sm option {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
 }
 
 .toolbar-hint {
