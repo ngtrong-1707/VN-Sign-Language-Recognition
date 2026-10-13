@@ -15,7 +15,7 @@ Hệ thống nhận diện cử chỉ Ngôn ngữ Ký hiệu Tiếng Việt (VSL
 [![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-CPU_%3C1ms-005ced?style=flat-square&logo=onnx&logoColor=white)](https://onnxruntime.ai)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-8%2F8_Passed-brightgreen?style=flat-square&logo=pytest&logoColor=white)](#-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-9%2F9_Passed-brightgreen?style=flat-square&logo=pytest&logoColor=white)](#-kiểm-thử-tự-động)
 
 <br/>
 
@@ -24,6 +24,7 @@ Hệ thống nhận diện cử chỉ Ngôn ngữ Ký hiệu Tiếng Việt (VSL
 [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống) • 
 [Benchmark](#-đánh-giá-hiệu-năng--benchmark) • 
 [Cài đặt & Khởi chạy](#-cài-đặt--sử-dụng) • 
+[API Documentation](#-danh-sách-api-endpoints) • 
 [Triển khai Docker](#-triển-khai-docker) • 
 [Giấy phép](#-giấy-phép)
 
@@ -148,9 +149,44 @@ python server.py
 ```
 Mở trình duyệt tại: `http://localhost:8000`
 
-- Chế độ **Trực tiếp Webcam**: Nhận diện cử chỉ qua camera, phát âm TTS tiếng Việt.
+- Chế độ **Trực tiếp Webcam**: Nhận diện cử chỉ qua camera, phát âm TTS tiếng Việt. Hỗ trợ tự động quét và chuyển đổi giữa các thiết bị camera (Multi-camera Discovery).
 - Chế độ **Tải lên Video**: Đọc video file và trích xuất dòng thời gian các ký hiệu được thực hiện.
 - Chế độ **Từ điển VSL**: Tra cứu danh mục 20 từ vựng kèm hướng dẫn cử chỉ.
+- Chế độ **Phản hồi (Feedback)**: Gửi báo cáo lỗi nhận diện trực tiếp về cơ sở dữ liệu để phục vụ Active Learning.
+
+---
+
+## 📂 Cấu trúc thư mục
+
+```text
+VN-Sign-Language-Recognition/
+├── src/vsl/
+│   ├── api/          # FastAPI Server, WebSockets & REST Routes
+│   ├── core/         # Landmark Extractor, Detector, Renderer, Smoother
+│   ├── db/           # SQLAlchemy Async Models & Repositories
+│   ├── models/       # PyTorch Architectures & ONNX Inference Engine
+│   └── cli/          # OpenCV HUD Desktop Application
+├── assets/           # Hình ảnh demo, biểu đồ, fonts & MediaPipe Tasks
+├── models/checkpoints/ # Trọng số model (.pth, .onnx)
+├── tests/            # Bộ kiểm thử pytest tự động
+├── Dockerfile        # Containerization
+└── server.py         # Entrypoint khởi động Web Studio
+```
+
+---
+
+## 📡 Danh sách API Endpoints
+
+Hệ thống cung cấp đầy đủ giao diện lập trình để tích hợp vào các ứng dụng khác:
+
+| Phương thức | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| `GET` | `/api/cameras` | Liệt kê danh sách camera khả dụng trên host. |
+| `GET` | `/api/dictionary` | Truy xuất toàn bộ từ điển 20 cử chỉ VSL. |
+| `POST` | `/api/predict_video` | Phân tích video và trả về timeline nhận diện. |
+| `POST` | `/api/feedback` | Gửi phản hồi sửa lỗi nhận diện (Active Learning). |
+| `GET` | `/api/system_stats` | Lấy thông số hệ thống, độ trễ và thông tin model. |
+| `WS` | `/ws/stream` | Streaming nhận diện thời gian thực tốc độ cao. |
 
 ### 3. Chạy OpenCV HUD (Desktop App)
 
