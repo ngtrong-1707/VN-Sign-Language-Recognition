@@ -1,15 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
   "functions": {
     "api/index.py": {
       "includeFiles": "{src/**,templates/**,static/**,assets/**,models/checkpoints/vsl_model.onnx*,models/checkpoints/label_map.json,data/demo/**}"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index"
-    }
-  ]
+  }
 }
