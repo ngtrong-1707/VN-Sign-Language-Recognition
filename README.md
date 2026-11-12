@@ -15,7 +15,8 @@ Hệ thống nhận diện cử chỉ Ngôn ngữ Ký hiệu Tiếng Việt (VSL
 [![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-CPU_%3C1ms-005ced?style=flat-square&logo=onnx&logoColor=white)](https://onnxruntime.ai)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-9%2F9_Passed-brightgreen?style=flat-square&logo=pytest&logoColor=white)](#-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-11%2F11_Passed-brightgreen?style=flat-square&logo=pytest&logoColor=white)](#-kiểm-thử-tự-động)
+[![Deploy with Vercel](https://img.shields.io/badge/Vercel-Serverless_Ready-000000?style=flat-square&logo=vercel&logoColor=white)](#-triển-khai-vercel-serverless)
 
 <br/>
 
@@ -183,7 +184,11 @@ Hệ thống cung cấp đầy đủ giao diện lập trình để tích hợp 
 | :--- | :--- | :--- |
 | `GET` | `/api/cameras` | Liệt kê danh sách camera khả dụng trên host. |
 | `GET` | `/api/dictionary` | Truy xuất toàn bộ từ điển 20 cử chỉ VSL. |
-| `POST` | `/api/predict_video` | Phân tích video và trả về timeline nhận diện. |
+| `POST` | `/api/predict` | Phân loại cửa sổ 30 frames × 258 đặc trưng landmark (dùng cho client MediaPipe WASM / Serverless). |
+| `POST` | `/api/predict_timeline` | Xây dựng timeline câu dịch từ chuỗi landmark trích xuất trên trình duyệt. |
+| `GET` | `/api/predict_video/demo_sequence/{action}` | Tải chuỗi 30 frames mẫu kèm tọa độ 2D để mô phỏng Skeleton & AI trực tiếp. |
+| `POST` | `/api/predict_video/demo_timeline` | Chạy demo ghép câu tự động trên chuỗi 5 cử chỉ liên tiếp. |
+| `POST` | `/api/predict_video` | Phân tích file video và trả về timeline nhận diện. |
 | `POST` | `/api/feedback` | Gửi phản hồi sửa lỗi nhận diện (Active Learning). |
 | `GET` | `/api/system_stats` | Lấy thông số hệ thống, độ trễ và thông tin model. |
 | `WS` | `/ws/stream` | Streaming nhận diện thời gian thực tốc độ cao. |
@@ -208,6 +213,20 @@ python 03_realtime_inference.py --camera 1 --width 1280 --height 720
 ```bash
 python train_pipeline.py
 ```
+
+---
+
+## ☁️ Triển khai Vercel (Serverless)
+
+Dự án hỗ trợ triển khai trực tiếp lên **Vercel** thông qua kiến trúc **Hybrid Browser-WASM + Serverless ONNX**:
+- **Trình duyệt (Client):** Chạy MediaPipe Tasks Vision (WASM/WebGPU) để trích xuất vector 258 chiều từ Webcam hoặc Video ngay trên thiết bị người dùng.
+- **Serverless Function (`api/index.py`):** Chạy mô hình `vsl_model.onnx` trên `onnxruntime` + `numpy` (bundle nhẹ < 35MB, không cần cài đặt `torch` hay `opencv` trên đám mây).
+- **Chế độ Mô phỏng AI (Demo):** Đóng gói sẵn 20 mẫu chuẩn trong `data/demo/demo_sequences.json` giúp người xem portfolio có thể bấm thử nghiệm toàn bộ 20 ký hiệu ngay cả khi không bật camera.
+
+Cách deploy:
+1. Import repository `ngtrong-1707/VN-Sign-Language-Recognition` vào [Vercel](https://vercel.com/new).
+2. Giữ nguyên cấu hình mặc định (`vercel.json` đã cấu hình sẵn entrypoint `api/index.py` và `.vercelignore`).
+3. Nhấn **Deploy**.
 
 ---
 

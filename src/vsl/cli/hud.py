@@ -74,6 +74,7 @@ def run_hud(camera_source: Union[int, str] = 0, width: int = 1280, height: int =
     prev_time = time.time()
     current_pred = None
     conf = 0.0
+    idle_frames = 0
 
     try:
         while cap.isOpened():
@@ -94,14 +95,23 @@ def run_hud(camera_source: Union[int, str] = 0, width: int = 1280, height: int =
             results = detector.process(frame)
             draw_styled_landmarks(frame, results)
 
-            # 2. Append features to sliding window
+            # 2. Append features to sliding window if hands are visible
             keypoints = extract_landmarks(results)
-            buffer.append(keypoints)
+            if np.any(keypoints[132:] != 0):
+                idle_frames = 0
+                buffer.append(keypoints)
+            else:
+                idle_frames += 1
+                if idle_frames >= 6:
+                    buffer.clear()
+                    current_pred = None
+                    conf = 0.0
 
             # 3. Model Inference & Temporal Smoothing
-            if len(buffer) == settings.SEQUENCE_LENGTH:
+            if len(buffer) == settings.SEQUENCE_LENGTH and idle_frames == 0:
                 window_arr = np.array(buffer)
-                current_pred, disp_name, icon, conf, top5, latency_ms = engine.predict(window_arr)
+                pred_name, disp_name, icon, conf, top5, latency_ms = engine.predict(window_arr)
+                current_pred = disp_name
                 smoother.update(disp_name, conf)
 
             # 4. Draw HUD Dashboard

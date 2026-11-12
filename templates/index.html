@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VSL Vision — Hệ Thống Nhận Diện Ngôn Ngữ Ký Hiệu Tiếng Việt</title>
+    <meta name="description" content="Nhận diện 20 ký hiệu Ngôn ngữ Ký hiệu Tiếng Việt thời gian thực từ webcam bằng MediaPipe + Bi-GRU Attention + ONNX Runtime. Dự án của Nguyễn Đình Minh Trọng (Mochi).">
+    <meta name="author" content="Nguyễn Đình Minh Trọng (Mochi)">
+    <meta property="og:title" content="VSL Vision — Vietnamese Sign Language Recognition">
+    <meta property="og:description" content="Nhận diện Ngôn ngữ Ký hiệu Tiếng Việt thời gian thực ngay trên trình duyệt (MediaPipe WASM + ONNX Runtime).">
+    <meta property="og:image" content="/assets/banner.png">
+    <meta name="theme-color" content="#0b0f17">
     
     <!-- Typography: Inter / Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +19,7 @@
     <!-- Pro Max Minimalist Engineering UI Stylesheet -->
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body>
+<body data-mode="{{ deploy_mode | default('server') }}">
 
     <!-- Minimal Header Navigation -->
     <header class="header">
@@ -21,7 +27,7 @@
             <a href="/" class="brand">
                 <span class="brand-badge">VSL</span>
                 <span class="brand-title">Vision Studio</span>
-                <span class="brand-version">v2.1</span>
+                <span class="brand-version">v2.2</span>
             </a>
 
             <nav class="nav-tabs">
@@ -41,8 +47,8 @@
 
             <div class="header-status">
                 <div id="ws-status-badge" class="status-indicator">
-                    <span class="status-dot online"></span>
-                    <span id="ws-status-text">ONNX ENGINE</span>
+                    <span class="status-dot"></span>
+                    <span id="ws-status-text">ĐANG KẾT NỐI</span>
                 </div>
                 <div class="device-tag">
                     {{ device }}
@@ -73,14 +79,20 @@
                             <p class="placeholder-desc">
                                 Nhấn nút bên dưới để cấp quyền camera và kích hoạt bộ suy luận landmarks MediaPipe + ONNX Runtime thời gian thực.
                             </p>
-                            <button id="btn-toggle-cam" class="btn btn-primary">
-                                Bật Camera
-                            </button>
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+                                <button id="btn-toggle-cam" class="btn btn-primary">
+                                    📷 Bật Camera
+                                </button>
+                                <button id="btn-demo-sim" class="btn btn-secondary">
+                                    ▶ Chạy Mô Phỏng AI (Demo)
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Video & Canvas Tracking Layers -->
                         <video id="video-element" playsinline style="transform: scaleX(-1);"></video>
-                        <canvas id="canvas-element" style="transform: scaleX(-1);"></canvas>
+                        <canvas id="canvas-element"></canvas>
+                        <div id="engine-toast" class="engine-toast hidden"></div>
 
                         <!-- HUD Floating Badge -->
                         <div id="hud-badge" class="hud-floating-badge hidden">
@@ -192,17 +204,17 @@
                         <div class="panel-header">
                             <div class="panel-title">
                                 <span>📖</span>
-                                <span>Cử chỉ phổ biến</span>
+                                <span>Cử chỉ phổ biến (Nhấn để mô phỏng)</span>
                             </div>
                         </div>
                         <div class="quick-tags">
-                            <span class="guide-tag">👋 Xin chào</span>
-                            <span class="guide-tag">🙏 Cảm ơn</span>
-                            <span class="guide-tag">🙋 Tạm biệt</span>
-                            <span class="guide-tag">❤️ Yêu</span>
-                            <span class="guide-tag">🇻🇳 Việt Nam</span>
-                            <span class="guide-tag">🍚 Ăn cơm</span>
-                            <span class="guide-tag">🥛 Uống nước</span>
+                            <span class="guide-tag" data-action="Xin chao" style="cursor:pointer;" title="Nhấn để mô phỏng cử chỉ Xin chào">👋 Xin chào</span>
+                            <span class="guide-tag" data-action="Cam on" style="cursor:pointer;" title="Nhấn để mô phỏng cử chỉ Cảm ơn">🙏 Cảm ơn</span>
+                            <span class="guide-tag" data-action="Tam biet" style="cursor:pointer;" title="Nhấn để mô phỏng cử chỉ Tạm biệt">🙋 Tạm biệt</span>
+                            <span class="guide-tag" data-action="Yeu" style="cursor:pointer;" title="Nhấn để mô phỏng cử chỉ Yêu">❤️ Yêu</span>
+                            <span class="guide-tag" data-action="Viet Nam" style="cursor:pointer;" title="Nhấn để mô phỏng cử chỉ Việt Nam">🇻🇳 Việt Nam</span>
+                            <span class="guide-tag" data-action="An com" style="cursor:pointer;" title="Nhấn để mô phỏng cử chỉ Ăn cơm">🍚 Ăn cơm</span>
+                            <span class="guide-tag" data-action="Uong nuoc" style="cursor:pointer;" title="Nhấn để mô phỏng cử chỉ Uống nước">🥛 Uống nước</span>
                         </div>
                     </div>
                 </aside>
@@ -219,6 +231,11 @@
                             <span>📁</span>
                             <span>Phân tích Tệp Video Offline</span>
                         </div>
+                        <div class="panel-actions">
+                            <button id="btn-demo-timeline" class="btn btn-primary btn-sm">
+                                🎬 Chạy Chuỗi Video Mẫu (Demo 5 Cử Chỉ)
+                            </button>
+                        </div>
                     </div>
 
                     <div id="upload-dropzone" class="upload-dropzone">
@@ -231,7 +248,11 @@
                             </svg>
                         </div>
                         <h4 class="upload-prompt">Kéo thả tệp video vào đây hoặc nhấn để chọn file</h4>
+                        {% if deploy_mode == 'serverless' %}
+                        <p class="upload-sub">MP4 / WebM (tối đa 60 giây) — video được xử lý ngay trên trình duyệt bằng MediaPipe WASM, chỉ gửi tọa độ landmark lên máy chủ.</p>
+                        {% else %}
                         <p class="upload-sub">Định dạng hỗ trợ: MP4, WebM, AVI (Dung lượng tối đa 100MB)</p>
+                        {% endif %}
                     </div>
 
                     <div id="upload-status" class="upload-status-bar hidden"></div>
@@ -271,7 +292,11 @@
                     <button class="chip" data-cat="Giao tiếp">Giao tiếp</button>
                     <button class="chip" data-cat="Đại từ">Đại từ</button>
                     <button class="chip" data-cat="Cảm xúc">Cảm xúc</button>
+                    <button class="chip" data-cat="Xã hội">Xã hội</button>
+                    <button class="chip" data-cat="Nghề nghiệp">Nghề nghiệp</button>
+                    <button class="chip" data-cat="Địa điểm">Địa điểm</button>
                     <button class="chip" data-cat="Đời sống">Đời sống</button>
+                    <button class="chip" data-cat="Địa danh">Địa danh</button>
                     <button class="chip" data-cat="Câu hỏi">Câu hỏi</button>
                 </div>
             </div>
@@ -286,6 +311,11 @@
                     <h3 class="dict-card-title">{{ item.display }}</h3>
                     <div class="dict-key"><code>{{ item.name }}</code></div>
                     <p class="dict-card-desc">{{ item.desc }}</p>
+                    <div style="margin-top: auto; padding-top: 0.75rem;">
+                        <button class="btn btn-secondary btn-sm btn-sim-card" data-sim-action="{{ item.name }}" style="width: 100%; justify-content: center;">
+                            ▶ Mô phỏng Skeleton & AI
+                        </button>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -325,8 +355,19 @@
                     </div>
 
                     <div class="benchmark-image-wrap">
-                        <h4 class="spec-heading" style="margin-top: 1.5rem;">Biểu đồ So sánh Hiệu năng</h4>
+                        <h4 class="spec-heading" style="margin-top: 1.5rem;">Biểu đồ So sánh Hiệu năng (Bi-GRU vs Bi-LSTM vs Transformer)</h4>
                         <img src="/assets/model_benchmark.png" alt="Model Benchmark" class="benchmark-img">
+                    </div>
+
+                    <div class="specs-grid" style="margin-top: 1.5rem;">
+                        <div class="benchmark-image-wrap">
+                            <h4 class="spec-heading">Đường cong Huấn luyện (Training & Validation Curves)</h4>
+                            <img src="/assets/training_curves.png" alt="Training Curves" class="benchmark-img">
+                        </div>
+                        <div class="benchmark-image-wrap">
+                            <h4 class="spec-heading">Ma trận Nhầm lẫn (Confusion Matrix — 20 Lớp VSL)</h4>
+                            <img src="/assets/confusion_matrix.png" alt="Confusion Matrix" class="benchmark-img">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -364,6 +405,16 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <span>© 2026 <a href="https://ngtrong1707.vercel.app/" target="_blank" rel="noopener">Nguyễn Đình Minh Trọng (Mochi)</a> · UTH Data Science &amp; AI</span>
+        <span class="footer-links">
+            <a href="https://github.com/ngtrong-1707/VN-Sign-Language-Recognition" target="_blank" rel="noopener">GitHub</a>
+            <span>·</span>
+            <span>MediaPipe + Bi-GRU Attention + ONNX Runtime</span>
+        </span>
+    </footer>
 
     <!-- Application Engine Script -->
     <script src="/static/js/app.js"></script>

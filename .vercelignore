@@ -1,0 +1,25 @@
+# Exclude heavy local-only training & desktop files from Vercel Serverless bundle
+pyproject.toml
+requirements-full.txt
+Dockerfile
+docker-compose.yml
+.github/
+.pytest_cache/
+tests/
+logs/
+*.db
+*.sqlite
+*.sqlite3
+data/sequences/
+data/raw_videos/
+models/checkpoints/*.pth
+models/checkpoints/*.task
+01_collect_data.py
+02_preprocess_and_train.py
+03_realtime_inference.py
+dataset_generator.py
+train_pipeline.py
+generate_benchmark_charts.py
+generate_codesnap.py
+generate_demo_ui.py
+scripts/

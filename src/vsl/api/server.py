@@ -36,8 +36,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Mount static and templates
+# Mount static, assets, and templates
 app.mount("/static", StaticFiles(directory=str(settings.STATIC_DIR)), name="static")
+assets_dir = settings.BASE_DIR / "assets"
+if assets_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
 templates = Jinja2Templates(directory=str(settings.TEMPLATES_DIR))
 
 # Include API Routers
@@ -51,14 +54,23 @@ app.include_router(ws_router)
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard(request: Request):
     """Renders the main Hope:RE web studio dashboard."""
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "actions_metadata": ACTIONS_METADATA,
-        "device": settings.DEVICE.upper(),
-        "total_params": "428.5K",
-        "actions_count": len(ACTIONS),
-        "engine_type": "ONNX Runtime (CPU <1ms)" if settings.USE_ONNX else "PyTorch Native"
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "actions_metadata": ACTIONS_METADATA,
+            "device": settings.DEVICE.upper(),
+            "total_params": "428.5K",
+            "actions_count": len(ACTIONS),
+            "engine_type": "ONNX Runtime (CPU <1ms)" if settings.USE_ONNX else "PyTorch Native",
+            "deploy_mode": "server"
+        }
+    )
+
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "mode": "server", "version": settings.VERSION}
 
 
 @app.get("/api/system_stats")
@@ -75,3 +87,15 @@ async def get_system_stats():
         "architecture": "Bi-directional GRU with Temporal Attention (VSL_BiGRU v2.4)",
         "vocabulary_size": len(ACTIONS)
     })
+
+
+def main():
+    """CLI Entrypoint for vsl-server."""
+    import uvicorn
+    uvicorn.run(
+        "vsl.api.server:app",
+        host=settings.SERVER_HOST,
+        port=settings.SERVER_PORT,
+        reload=False,
+        log_level="info"
+    )

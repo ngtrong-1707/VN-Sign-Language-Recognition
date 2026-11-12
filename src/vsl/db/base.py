@@ -20,9 +20,14 @@ async_session_factory = async_sessionmaker(
     class_=AsyncSession
 )
 
+_db_initialized = False
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency injection for FastAPI routes."""
+    global _db_initialized
+    if not _db_initialized:
+        await init_db()
     async with async_session_factory() as session:
         try:
             yield session
@@ -32,6 +37,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db():
     """Creates database tables and seeds initial 20 VSL signs."""
+    global _db_initialized
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -68,3 +74,5 @@ async def init_db():
                     session.add(vocab)
 
                 print("[DB] Hoàn tất nạp dữ liệu từ điển ban đầu!")
+
+    _db_initialized = True
