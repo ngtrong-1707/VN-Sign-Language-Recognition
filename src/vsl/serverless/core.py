@@ -19,7 +19,8 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-ROOT_DIR = Path(__file__).resolve().parents[3]
+_CANDIDATE_ROOT = Path(__file__).resolve().parents[3]
+ROOT_DIR = _CANDIDATE_ROOT if (_CANDIDATE_ROOT / "templates").exists() else Path.cwd()
 MODEL_DIR = ROOT_DIR / "models" / "checkpoints"
 ONNX_MODEL_PATH = MODEL_DIR / "vsl_model.onnx"
 LABEL_MAP_PATH = MODEL_DIR / "label_map.json"

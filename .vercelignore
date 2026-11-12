@@ -14,6 +14,10 @@ data/sequences/
 data/raw_videos/
 models/checkpoints/*.pth
 models/checkpoints/*.task
+models/vsl_model.py
+utils/
+config.py
+server.py
 01_collect_data.py
 02_preprocess_and_train.py
 03_realtime_inference.py
@@ -23,4 +27,8 @@ generate_benchmark_charts.py
 generate_codesnap.py
 generate_demo_ui.py
 scripts/
-
+src/vsl/cli/
+src/vsl/db/
+src/vsl/core/
+src/vsl/models/
+src/vsl/api/

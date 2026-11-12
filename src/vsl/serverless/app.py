@@ -27,9 +27,10 @@ app = FastAPI(
     description="Nhận diện Ngôn ngữ Ký hiệu Tiếng Việt — bản triển khai serverless (MediaPipe WASM + ONNX Runtime).",
 )
 
-app.mount("/static", StaticFiles(directory=str(core.ROOT_DIR / "static")), name="static")
+if (core.ROOT_DIR / "static").exists():
+    app.mount("/static", StaticFiles(directory=str(core.ROOT_DIR / "static"), check_dir=False), name="static")
 if (core.ROOT_DIR / "assets").exists():
-    app.mount("/assets", StaticFiles(directory=str(core.ROOT_DIR / "assets")), name="assets")
+    app.mount("/assets", StaticFiles(directory=str(core.ROOT_DIR / "assets"), check_dir=False), name="assets")
 templates = Jinja2Templates(directory=str(core.ROOT_DIR / "templates"))
 
 _engine = None
